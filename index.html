@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShipSmart MVP - Shipping Label Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            padding: 15px 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .navbar .container { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.5em; font-weight: bold; }
+        .user-info { display: flex; gap: 15px; align-items: center; }
+        .logout-btn { 
+            background: #dc2626; 
+            padding: 8px 16px; 
+            border: none; 
+            border-radius: 5px; 
+            color: white;
+            cursor: pointer;
+        }
+        .logout-btn:hover { background: #b91c1c; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header { 
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6); 
+            padding: 40px 20px; 
+            margin-bottom: 40px; 
+            border-radius: 10px;
+            text-align: center;
+        }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .subtitle { color: #cbd5e1; font-size: 1.1em; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .card { 
+            background: #1e293b; 
+            padding: 20px; 
+            border-radius: 8px; 
+            border: 1px solid #334155;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .card:hover { transform: translateY(-2px); border-color: #3b82f6; }
+        .card h2 { margin: 15px 0; color: #3b82f6; }
+        .card h3 { margin: 15px 0 10px; color: #60a5fa; }
+        .button { 
+            background: #3b82f6; 
+            color: white; 
+            padding: 12px 24px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin: 10px 5px 10px 0;
+            font-size: 1em;
+            transition: background 0.2s;
+        }
+        .button:hover { background: #2563eb; }
+        .button.secondary { background: #475569; }
+        .button.secondary:hover { background: #334155; }
+        .button.danger { background: #dc2626; }
+        .button.danger:hover { background: #b91c1c; }
+        .success { color: #10b981; }
+        .warning { color: #f59e0b; }
+        .info { 
+            background: #1e293b; 
+            padding: 15px; 
+            border-left: 4px solid #3b82f6; 
+            margin: 15px 0; 
+            border-radius: 5px;
+        }
+        .feature-list { list-style: none; padding: 15px 0; }
+        .feature-list li { padding: 8px 0; }
+        .feature-list li:before { content: "✅ "; margin-right: 10px; color: #10b981; }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; color: #cbd5e1; font-weight: 500; }
+        input, select, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            background: #0f172a; 
+            color: #e2e8f0; 
+            border: 1px solid #334155; 
+            border-radius: 5px; 
+            font-size: 1em;
+            font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus { 
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .tab-buttons { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+            flex-wrap: wrap;
+        }
+        .tab-btn { 
+            padding: 12px 20px; 
+            background: #334155; 
+            color: #cbd5e1; 
+            border: none; 
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { background: #475569; }
+        .tab-btn.active { background: #3b82f6; color: white; }
+        .tab { display: none; }
+        .tab.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .rate-option { 
+            background: #0f172a; 
+            padding: 15px; 
+            border: 2px solid #334155; 
+            border-radius: 5px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .rate-option:hover { 
+            border-color: #3b82f6; 
+            background: #1e293b;
+            transform: translateX(5px);
+        }
+        .rate-option.selected { 
+            border-color: #10b981; 
+            background: #0f4c3a;
+        }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        .stat-box { text-align: center; }
+        .stat-number { font-size: 2.5em; color: #3b82f6; font-weight: bold; }
+        .stat-label { color: #94a3b8; font-size: 0.9em; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
+        th { background: #0f172a; color: #60a5fa; }
+        tr:hover { background: #0f172a; }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .status-pending { background: #f59e0b; color: #000; }
+        .status-labeled { background: #3b82f6; color: white; }
+        .status-shipped { background: #10b981; color: white; }
+        .auth-container { max-width: 400px; margin: 50px auto; }
+        .success-message {
+            background: #065f46;
+            border: 1px solid #10b981;
+            color: #d1fae5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .error-message {
+            background: #7f1d1d;
+            border: 1px solid #dc2626;
+            color: #fee2e2;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) {
+            .two-col { grid-template-columns: 1fr; }
+            h1 { font-size: 1.8em; }
+            .tab-buttons { flex-direction: column; }
+            .tab-btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <div class="navbar" id="navbar" style="display: none;">
+        <div class="container">
+            <div class="logo">🚀 ShipSmart</div>
+            <div class="user-info">
+                <span id="userEmail"></span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Login/Register Form -->
+        <div id="authPage" class="auth-container">
+            <header>
+                <h1>🚀 ShipSmart MVP</h1>
+                <p class="subtitle">Shipping Label Management Platform</p>
+            </header>
+
+            <div class="card">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="showAuthTab('signin')">Sign In</button>
+                    <button class="tab-btn" onclick="showAuthTab('register')">Register</button>
+                </div>
+
+                <!-- Sign In Tab -->
+                <div id="signin" class="tab active">
+                    <h2>Welcome Back</h2>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="signinEmail" placeholder="test@example.com" value="test@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="signinPassword" placeholder="password123" value="password123">
+                    </div>
+                    <button class="button" onclick="signin()">Sign In</button>
+                    <div id="signinError"></div>
+                    <div class="info" style="margin-top: 20px;">
+                        <strong>Demo Credentials:</strong><br>
+                        Email: test@example.com<br>
+                        Password: password123
+                    </div>
+                </div>
+
+                <!-- Register Tab -->
+                <div id="register" class="tab">
+                    <h2>Create Account</h2>
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="registerName" placeholder="John Smith">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="registerEmail" placeholder="john@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Business Name</label>
+                        <input type="text" id="registerBusiness" placeholder="Your Business">
+                    </div>
+                    <div class="form-group">
+                        <label>Password (min 8 chars)</label>
+                        <input type="password" id="registerPassword" placeholder="••••••••">
+                    </div>
+                    <button class="button" onclick="register()">Create Account</button>
+                    <div id="registerError"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboardPage" style="display: none;">
+            <header>
+                <h1>📊 Dashboard</h1>
+                <p class="subtitle">Welcome to ShipSmart</p>
+            </header>
+
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="showTab('overview')">Overview</button>
+                <button class="tab-btn" onclick="showTab('orders')">Orders</button>
+                <button class="tab-btn" onclick="showTab('create-label')">Create Label</button>
+                <button class="tab-btn" onclick="showTab('rates')">Compare Rates</button>
+                <button class="tab-btn" onclick="showTab('settings')">Settings</button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div id="overview" class="tab active">
+                <div class="stats-grid">
+                    <div class="card">
+                        <div class="stat-number">3</div>
+                        <div class="stat-label">Pending Orders</div>
+                    </div>
+                    <div class="card">
+                        <div class="stat-number">12</div>
+                        <div class="stat-label">Labeled Shipments</div>
+                    </div>
+                    <div class="card">
+                        <div class="stat-number">8</div>
+                        <div class="stat-label">Shipped Today</div>
+                    </div>
+                    <div class="card">
+                        <div class="stat-number">$4,850</div>
+                        <div class="stat-label">Total Revenue</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 30px;">
+                    <h3>Recent Orders</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Status</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ORD-001</td>
+                                <td><span class="status-badge status-pending">Pending</span></td>
+                                <td>New York, NY</td>
+                                <td>Los Angeles, CA</td>
+                                <td>Apr 8, 2026</td>
+                            </tr>
+                            <tr>
+                                <td>ORD-002</td>
+                                <td><span class="status-badge status-labeled">Labeled</span></td>
+                                <td>Chicago, IL</td>
+                                <td>Miami, FL</td>
+                                <td>Apr 7, 2026</td>
+                            </tr>
+                            <tr>
+                                <td>ORD-003</td>
+                                <td><span class="status-badge status-shipped">Shipped</span></td>
+                                <td>Boston, MA</td>
+                                <td>Seattle, WA</td>
+                                <td>Apr 6, 2026</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, #10b981, #059669);">
+                    <h3>✨ Features Available</h3>
+                    <ul class="feature-list">
+                        <li>Create shipping orders</li>
+                        <li>Compare rates from 11+ carriers</li>
+                        <li>Generate shipping labels</li>
+                        <li>Track shipments</li>
+                        <li>View order history</li>
+                        <li>Manage billing & subscription</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Orders Tab -->
+            <div id="orders" class="tab">
+                <div class="card">
+                    <h3>All Orders</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Recipient</th>
+                                <th>Status</th>
+                                <th>Weight</th>
+                                <th>Tracking</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTable">
+                            <tr>
+                                <td>ORD-001</td>
+                                <td>John Smith</td>
+                                <td><span class="status-badge status-pending">Pending</span></td>
+                                <td>2.5 lbs</td>
+                                <td>-</td>
+                                <td><button class="button secondary" onclick="alert('Edit order')">Edit</button></td>
+                            </tr>
+                            <tr>
+                                <td>ORD-002</td>
+                                <td>Jane Doe</td>
+                                <td><span class="status-badge status-labeled">Labeled</span></td>
+                                <td>1.8 lbs</td>
+                                <td>1Z999AA10123</td>
+                                <td><button class="button secondary" onclick="alert('View tracking')">Track</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Create Label Tab -->
+            <div id="create-label" class="tab">
+                <div class="card">
+                    <h3>Step 1: Enter Shipment Details</h3>
+                    <div class="two-col">
+                        <div>
+                            <div class="form-group">
+                                <label>Recipient Name</label>
+                                <input type="text" id="recipientName" placeholder="John Smith" value="John Smith">
+                            </div>
+                            <div class="form-group">
+                                <label>Recipient Email</label>
+                                <input type="email" id="recipientEmail" placeholder="john@example.com" value="john@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label>From Address</label>
+                                <textarea id="fromAddress" placeholder="123 Main St, New York, NY 10001" rows="3">123 Main St, New York, NY 10001</textarea>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="form-group">
+                                <label>To Address</label>
+                                <textarea id="toAddress" placeholder="456 Oak Ave, Los Angeles, CA 90001" rows="3">456 Oak Ave, Los Angeles, CA 90001</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Weight (lbs)</label>
+                                <input type="number" id="weight" placeholder="2.5" value="2.5" min="0.1" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label>Package Dimensions (optional)</label>
+                                <input type="text" id="dimensions" placeholder="12x8x4 inches">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="button" onclick="calculateRates()">Calculate Shipping Rates</button>
+                </div>
+
+                <div id="ratesContainer" style="display: none; margin-top: 20px;">
+                    <div class="card">
+                        <h3>Step 2: Compare Rates (11+ Carriers)</h3>
+                        <div id="ratesList"></div>
+                        <button class="button" onclick="generateLabel()" style="margin-top: 20px;">Proceed with Selected Rate</button>
+                    </div>
+                </div>
+
+                <div id="labelContainer" style="display: none; margin-top: 20px;">
+                    <div class="card" style="background: linear-gradient(135deg, #10b981, #059669); border: 2px solid #10b981;">
+                        <h3 style="color: white;">✅ Shipping Label Generated!</h3>
+                        <div style="margin: 25px 0; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 8px;">
+                            <p style="color: #cbd5e1; font-size: 0.9em;">Tracking Number</p>
+                            <p id="trackingNumber" style="font-family: 'Courier New', monospace; font-size: 2em; color: #fff; margin: 10px 0; letter-spacing: 2px;"></p>
+                        </div>
+                        <div id="labelDetails" style="background: rgba(0,0,0,0.1); padding: 15px; border-radius: 5px;"></div>
+                        <button class="button" style="background: white; color: #10b981; margin-top: 20px; font-weight: bold;">📥 Download PDF Label</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rates Tab -->
+            <div id="rates" class="tab">
+                <div class="card">
+                    <h3>Quick Rate Comparison</h3>
+                    <div class="form-group">
+                        <label>Weight (lbs)</label>
+                        <input type="number" id="quickWeight" value="2.5" min="0.1" step="0.1">
+                    </div>
+                    <button class="button" onclick="quickRates()">Compare All Rates</button>
+                    <div id="quickRatesList" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings" class="tab">
+                <div class="two-col">
+                    <div class="card">
+                        <h3>Account Settings</h3>
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" id="settingsName" placeholder="Your Name" value="Test User">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="settingsEmail" readonly value="test@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Business Name</label>
+                            <input type="text" id="settingsBusiness" placeholder="Your Business" value="ShipSmart Demo">
+                        </div>
+                        <button class="button">Save Changes</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>Subscription</h3>
+                        <p><strong>Plan:</strong> Professional</p>
+                        <p><strong>Labels Used:</strong> 45 / 500</p>
+                        <div style="background: #0f172a; padding: 10px; border-radius: 5px; margin: 15px 0;">
+                            <div style="width: 45%; height: 20px; background: #3b82f6; border-radius: 3px;"></div>
+                        </div>
+                        <button class="button">Upgrade Plan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CARRIERS = [
+            { carrier: "USPS", service: "Ground Advantage", basePrice: 8.50, days: 3 },
+            { carrier: "USPS", service: "Priority Mail", basePrice: 12.99, days: 2 },
+            { carrier: "USPS", service: "Priority Express", basePrice: 28.50, days: 1 },
+            { carrier: "UPS", service: "Ground", basePrice: 10.25, days: 5 },
+            { carrier: "UPS", service: "3-Day Select", basePrice: 15.75, days: 3 },
+            { carrier: "UPS", service: "2nd Day Air", basePrice: 22.00, days: 2 },
+            { carrier: "FedEx", service: "Ground", basePrice: 11.50, days: 5 },
+            { carrier: "FedEx", service: "Express Saver", basePrice: 18.99, days: 3 },
+            { carrier: "FedEx", service: "2Day", basePrice: 24.50, days: 2 },
+            { carrier: "DHL", service: "Express", basePrice: 26.00, days: 2 },
+            { carrier: "DHL", service: "Parcel Ground", basePrice: 12.75, days: 5 }
+        ];
+
+        let users = JSON.parse(localStorage.getItem('users')) || {};
+        let currentUser = null;
+        let selectedRate = null;
+
+        // Initialize demo user
+        if (!users['test@example.com']) {
+            users['test@example.com'] = { email: 'test@example.com', password: 'password123', name: 'Test User', business: 'ShipSmart Demo' };
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+
+        function showAuthTab(tab) {
+            document.querySelectorAll('#authPage .tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#authPage .tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            document.querySelector(`button[onclick="showAuthTab('${tab}')"]`).classList.add('active');
+        }
+
+        function signin() {
+            const email = document.getElementById('signinEmail').value;
+            const password = document.getElementById('signinPassword').value;
+            const errorDiv = document.getElementById('signinError');
+
+            if (!email || !password) {
+                errorDiv.innerHTML = '<div class="error-message">Please enter email and password</div>';
+                return;
+            }
+
+            if (!users[email] || users[email].password !== password) {
+                errorDiv.innerHTML = '<div class="error-message">Invalid email or password</div>';
+                return;
+            }
+
+            currentUser = { email, name: users[email].name };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showDashboard();
+        }
+
+        function register() {
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const business = document.getElementById('registerBusiness').value;
+            const password = document.getElementById('registerPassword').value;
+            const errorDiv = document.getElementById('registerError');
+
+            if (!name || !email || !password) {
+                errorDiv.innerHTML = '<div class="error-message">Please fill all fields</div>';
+                return;
+            }
+
+            if (password.length < 8) {
+                errorDiv.innerHTML = '<div class="error-message">Password must be at least 8 characters</div>';
+                return;
+            }
+
+            if (users[email]) {
+                errorDiv.innerHTML = '<div class="error-message">Email already registered</div>';
+                return;
+            }
+
+            users[email] = { email, password, name, business };
+            localStorage.setItem('users', JSON.stringify(users));
+            errorDiv.innerHTML = '<div class="success-message">Account created! Please sign in.</div>';
+            setTimeout(() => showAuthTab('signin'), 2000);
+        }
+
+        function showDashboard() {
+            document.getElementById('authPage').style.display = 'none';
+            document.getElementById('dashboardPage').style.display = 'block';
+            document.getElementById('navbar').style.display = 'block';
+            document.getElementById('userEmail').textContent = currentUser.email;
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            location.reload();
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('#dashboardPage .tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('#dashboardPage .tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function calculateRates() {
+            const weight = parseFloat(document.getElementById('weight').value) || 1;
+            let rates = CARRIERS.map(c => ({
+                ...c,
+                price: (c.basePrice * (1 + weight * 0.15)).toFixed(2)
+            }));
+            rates.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+
+            let html = '';
+            rates.forEach((rate, i) => {
+                html += `
+                    <div class="rate-option" onclick="selectRateOption(this, ${i})">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong style="font-size: 1.1em;">${rate.carrier} - ${rate.service}</strong><br>
+                                <span style="color: #94a3b8; font-size: 0.9em;">📅 ${rate.days} business day${rate.days > 1 ? 's' : ''}</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="color: #10b981; font-size: 1.5em; font-weight: bold;">$${rate.price}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                if (i === 0) selectedRate = rate;
+            });
+
+            document.getElementById('ratesList').innerHTML = html;
+            document.getElementById('ratesContainer').style.display = 'block';
+            document.getElementById('labelContainer').style.display = 'none';
+        }
+
+        function selectRateOption(element, index) {
+            document.querySelectorAll('.rate-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedRate = index;
+        }
+
+        function generateLabel() {
+            const trackingNum = '1Z' + Math.random().toString().substr(2, 16);
+            const rate = CARRIERS[selectedRate] || CARRIERS[0];
+            
+            document.getElementById('trackingNumber').textContent = trackingNum;
+            document.getElementById('labelDetails').innerHTML = `
+                <p><strong>Carrier:</strong> ${rate.carrier}</p>
+                <p><strong>Service:</strong> ${rate.service}</p>
+                <p><strong>Estimated Delivery:</strong> ${new Date(Date.now() + rate.days * 24 * 60 * 60 * 1000).toLocaleDateString()}</p>
+            `;
+            document.getElementById('labelContainer').style.display = 'block';
+        }
+
+        function quickRates() {
+            const weight = parseFloat(document.getElementById('quickWeight').value) || 1;
+            let rates = CARRIERS.map(c => ({
+                ...c,
+                price: (c.basePrice * (1 + weight * 0.15)).toFixed(2)
+            }));
+            rates.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+
+            let html = '<table><thead><tr><th>Carrier</th><th>Service</th><th>Price</th><th>Days</th></tr></thead><tbody>';
+            rates.forEach(rate => {
+                html += `<tr><td>${rate.carrier}</td><td>${rate.service}</td><td>$${rate.price}</td><td>${rate.days}</td></tr>`;
+            });
+            html += '</tbody></table>';
+            document.getElementById('quickRatesList').innerHTML = html;
+        }
+
+        // Check if user is already logged in
+        const stored = localStorage.getItem('currentUser');
+        if (stored) {
+            currentUser = JSON.parse(stored);
+            showDashboard();
+        }
+    </script>
+</body>
+</html>
