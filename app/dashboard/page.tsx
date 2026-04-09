@@ -171,25 +171,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-                <span className="text-muted-foreground">Most used carrier</span>
-                <span className="font-semibold">USPS</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Avg. delivery time</span>
-                <span className="font-semibold">3.2 days</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Labels this week</span>
-                <span className="font-semibold">47</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Savings this week</span>
-                <span className="font-semibold text-success">$124.50</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
-}

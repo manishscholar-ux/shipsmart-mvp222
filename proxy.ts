@@ -2,9 +2,9 @@ import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const session = await auth();
-  
+
   // Protect dashboard routes
   if (request.nextUrl.pathname.startsWith("/dashboard")) {
     if (!session) {
@@ -12,10 +12,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Protect API routes (except auth endpoints)
-  if (request.nextUrl.pathname.startsWith("/api") && 
-      !request.nextUrl.pathname.startsWith("/api/auth") &&
-      !request.nextUrl.pathname.startsWith("/api/public")) {
+  // Protect API routes (except auth and public endpoints)
+  if (
+    request.nextUrl.pathname.startsWith("/api") &&
+    !request.nextUrl.pathname.startsWith("/api/auth") &&
+    !request.nextUrl.pathname.startsWith("/api/public")
+  ) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
