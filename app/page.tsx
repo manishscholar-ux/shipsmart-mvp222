@@ -1,8 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 import {
   Truck,
   Package,
@@ -13,6 +20,7 @@ import {
   Check,
   ArrowRight,
   ChevronRight,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { carriers } from "@/lib/carriers";
@@ -94,6 +102,8 @@ const pricingPlans = [
 ];
 
 export default function LandingPage() {
+  const [demoOpen, setDemoOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -162,9 +172,29 @@ export default function LandingPage() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="h-12 px-8">
-                Watch Demo
-              </Button>
+              <Dialog open={demoOpen} onOpenChange={setDemoOpen}>
+                <DialogTrigger asChild>
+                  <Button size="lg" variant="outline" className="h-12 px-8">
+                    Watch Demo
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl border-0 p-0 overflow-hidden">
+                  <div className="relative bg-black">
+                    <DialogClose className="absolute right-4 top-4 z-50 bg-white/20 hover:bg-white/30 rounded-full p-1">
+                      <X className="h-6 w-6 text-white" />
+                    </DialogClose>
+                    <iframe
+                      width="100%"
+                      height="720"
+                      src="https://www.youtube.com/embed/A2cw0FdR6oM"
+                      title="ShipSmart Demo"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
 
             {/* Stats */}
