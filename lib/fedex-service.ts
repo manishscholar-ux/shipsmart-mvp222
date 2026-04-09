@@ -16,15 +16,16 @@ interface FedExRateReply {
   output?: {
     rateReplyDetails?: Array<{
       serviceType: string;
-      totalNetCharge: number;
-      minimumCharges: number;
-      transactionShipDate: string;
-      pickupType: string;
-      dayOfWeek: string;
+      totalNetCharge?: number;
+      minimumCharges?: number;
+      transactionShipDate?: string;
+      pickupType?: string;
+      dayOfWeek?: string;
       deliveryDate?: string;
       businessDaysInTransit?: number;
     }>;
   };
+  errors?: Array<{ message: string; code: string }>;
 }
 
 async function getFedExAuthToken(): Promise<string> {
@@ -39,7 +40,8 @@ async function getFedExAuthToken(): Promise<string> {
   const credentials = Buffer.from(`${apiKey}:${apiSecret}`).toString("base64");
 
   try {
-    const response = await fetch(`${apiUrl}/oauth/authorize`, {
+    console.log("[FedEx] Requesting auth token...");
+    const response = await fetch(`${apiUrl}/oauth/token`, {
       method: "POST",
       headers: {
         "Authorization": `Basic ${credentials}`,
@@ -48,16 +50,22 @@ async function getFedExAuthToken(): Promise<string> {
       body: "grant_type=client_credentials",
     });
 
+    const responseText = await response.text();
+    console.log(`[FedEx] Auth response status: ${response.status}`);
+
     if (!response.ok) {
-      const error = await response.text();
-      console.error("FedEx OAuth error:", error);
-      throw new Error(`FedEx OAuth failed: ${response.status}`);
+      console.error(`[FedEx] Auth error response:`, responseText);
+      throw new Error(`FedEx OAuth failed: ${response.status} - ${responseText}`);
     }
 
-    const data: FedExAuthToken = await response.json();
+    const data = JSON.parse(responseText) as FedExAuthToken;
+    if (!data.access_token) {
+      throw new Error("No access token in FedEx response");
+    }
+    console.log("[FedEx] Auth successful");
     return data.access_token;
   } catch (error) {
-    console.error("Failed to get FedEx auth token:", error);
+    console.error("[FedEx] Auth token error:", error);
     throw error;
   }
 }
@@ -78,6 +86,7 @@ export async function getFedExRates(
   }
 
   try {
+    console.log("[FedEx] Getting auth token...");
     const token = await getFedExAuthToken();
 
     const requestPayload = {
@@ -115,6 +124,7 @@ export async function getFedExRates(
       },
     };
 
+    console.log("[FedEx] Requesting rates...");
     const response = await fetch(`${apiUrl}/rate/v1/rates/quote`, {
       method: "POST",
       headers: {
@@ -125,33 +135,45 @@ export async function getFedExRates(
       body: JSON.stringify(requestPayload),
     });
 
+    const responseText = await response.text();
+    console.log(`[FedEx] Rate response status: ${response.status}`);
+    console.log(`[FedEx] Rate response:`, responseText.substring(0, 500));
+
     if (!response.ok) {
-      const error = await response.text();
-      console.error("FedEx Rate API error:", error);
+      console.error(`[FedEx] Rate API error response:`, responseText);
       throw new Error(`FedEx Rate API failed: ${response.status}`);
     }
 
-    const data: FedExRateReply = await response.json();
+    const data: FedExRateReply = JSON.parse(responseText);
+
+    // Check for API errors in response
+    if (data.errors && data.errors.length > 0) {
+      console.error("[FedEx] API returned errors:", data.errors);
+      throw new Error(`FedEx API error: ${data.errors[0].message}`);
+    }
 
     if (!data.output?.rateReplyDetails || data.output.rateReplyDetails.length === 0) {
-      console.warn("No rates returned from FedEx API");
+      console.warn("[FedEx] No rates returned from API");
       return [];
     }
 
-    const rates: FedExRate[] = data.output.rateReplyDetails.map((detail) => {
-      return {
-        carrier: "FedEx",
-        service: `FedEx ${detail.serviceType.replace(/_/g, " ")}`,
-        rate: Number(detail.totalNetCharge.toFixed(2)),
-        estimatedDays: detail.businessDaysInTransit || getEstimatedDaysFromService(detail.serviceType),
-        currency: "USD",
-      };
-    });
+    const rates: FedExRate[] = data.output.rateReplyDetails
+      .filter((detail) => detail.totalNetCharge !== undefined && detail.totalNetCharge !== null)
+      .map((detail) => {
+        const charge = detail.totalNetCharge || 0;
+        return {
+          carrier: "FedEx",
+          service: `FedEx ${(detail.serviceType || "Unknown").replace(/_/g, " ")}`,
+          rate: parseFloat(charge.toString()) > 0 ? parseFloat(charge.toString()) : 9.99,
+          estimatedDays: detail.businessDaysInTransit || getEstimatedDaysFromService(detail.serviceType || ""),
+          currency: "USD",
+        };
+      });
 
+    console.log(`[FedEx] Returning ${rates.length} rates`);
     return rates;
   } catch (error) {
-    console.error("Failed to get FedEx rates:", error);
-    // Return empty array on error - will be handled by fallback in route handler
+    console.error("[FedEx] Failed to get rates:", error);
     return [];
   }
 }
