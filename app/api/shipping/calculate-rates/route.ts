@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getFedExRates } from "@/lib/fedex-service";
 
 interface RateRequest {
   weight: number;
@@ -19,7 +18,7 @@ interface ShippingRate {
   currency: string;
 }
 
-// Mock rates for other carriers (fallback)
+// Mock rates for all carriers
 function getMockRates(params: RateRequest): ShippingRate[] {
   const { weight, length = 12, width = 8, height = 6 } = params;
 
@@ -30,6 +29,9 @@ function getMockRates(params: RateRequest): ShippingRate[] {
     "UPS Ground": 8.99 + weight * 0.45,
     "UPS 3-Day Select": 15.99 + weight * 0.5,
     "UPS 2nd Day Air": 22.99 + weight * 0.65,
+    "FedEx Ground": 9.49 + weight * 0.5,
+    "FedEx Express Saver": 18.99 + weight * 0.7,
+    "FedEx 2Day": 24.99 + weight * 0.85,
     "DHL Express": 28.99 + weight * 0.75,
     "DHL Parcel Ground": 10.99 + weight * 0.4,
   };
@@ -56,7 +58,10 @@ function getEstimatedDays(service: string): number {
     "Ground": 5,
     "3-Day Select": 3,
     "2nd Day Air": 2,
+    "Express Saver": 5,
+    "2Day": 2,
     "Express": 1,
+    "Parcel Ground": 5,
   };
 
   for (const [key, days] of Object.entries(estimates)) {
@@ -69,39 +74,23 @@ export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as RateRequest;
 
-    // Get FedEx real rates
-    let fedexRates: ShippingRate[] = [];
-    try {
-      fedexRates = await getFedExRates(
-        body.fromZip,
-        body.toZip,
-        body.weight,
-        body.length,
-        body.width,
-        body.height
-      );
-    } catch (error) {
-      console.error("Error fetching FedEx rates:", error);
-      // Fallback to mock FedEx rates if API fails
-      fedexRates = getMockRates(body).filter((r) => r.carrier === "FedEx");
-    }
+    console.log("[Rates API] Request - From:", body.fromZip, "To:", body.toZip, "Weight:", body.weight);
 
-    // Get mock rates for other carriers
-    const mockRates = getMockRates(body).filter((r) => r.carrier !== "FedEx");
-
-    // Combine all rates
-    const allRates = [...fedexRates, ...mockRates];
+    // Get mock rates for all carriers
+    const rates = getMockRates(body);
 
     // Sort by price (ascending)
-    allRates.sort((a, b) => a.rate - b.rate);
+    rates.sort((a, b) => a.rate - b.rate);
+
+    console.log("[Rates API] Returning", rates.length, "rates");
 
     return NextResponse.json({
-      rates: allRates,
-      bestRate: allRates[0],
+      rates: rates,
+      bestRate: rates[0],
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Calculate rates error:", error);
+    console.error("[Rates API] Error:", error);
     return NextResponse.json(
       { error: "Failed to calculate rates" },
       { status: 500 }
